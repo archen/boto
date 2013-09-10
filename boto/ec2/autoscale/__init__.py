@@ -47,6 +47,7 @@ from boto.ec2.autoscale.tag import Tag
 
 RegionData = {
     'us-east-1': 'autoscaling.us-east-1.amazonaws.com',
+    'us-gov-west-1': 'autoscaling.us-gov-west-1.amazonaws.com',
     'us-west-1': 'autoscaling.us-west-1.amazonaws.com',
     'us-west-2': 'autoscaling.us-west-2.amazonaws.com',
     'sa-east-1': 'autoscaling.sa-east-1.amazonaws.com',
@@ -254,6 +255,11 @@ class AutoScaleConnection(AWSQueryConnection):
                   'AutoScalingGroupName': scaling_policy.as_name,
                   'PolicyName': scaling_policy.name,
                   'ScalingAdjustment': scaling_policy.scaling_adjustment}
+
+        if scaling_policy.adjustment_type == "PercentChangeInCapacity" and \
+           scaling_policy.min_adjustment_step is not None:
+            params['MinAdjustmentStep'] = scaling_policy.min_adjustment_step
+
         if scaling_policy.cooldown is not None:
             params['Cooldown'] = scaling_policy.cooldown
 

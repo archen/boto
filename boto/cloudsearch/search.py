@@ -38,7 +38,6 @@ class CommitMismatchError(Exception):
 
 
 class SearchResults(object):
-    
     def __init__(self, **attrs):
         self.rid = attrs['info']['rid']
         # self.doc_coverage_pct = attrs['info']['doc-coverage-pct']
@@ -292,8 +291,8 @@ class SearchConnection(object):
         r = requests.get(url, params=params)
         content = ensure_string(r.content)
         try:
-            data = json.loads(content)
-        except json.JSONDecodeError,e:
+            data = json.loads(r.content)
+        except ValueError, e:
             if r.status_code == 403:
                 msg = ''
                 import re
