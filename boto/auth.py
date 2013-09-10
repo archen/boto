@@ -40,9 +40,11 @@ import sys
 import time
 import urllib
 import posixpath
+from functools import cmp_to_key as c2k
 
 from boto.auth_handler import AuthHandler
 from boto.exception import BotoClientError
+from boto.compat import cmp
 #
 # the following is necessary because of the incompatibilities
 # between Python 2.4, 2.5, and 2.6 as well as the fact that some
@@ -561,10 +563,10 @@ class QueryAuthHandler(AuthHandler):
 
     def _build_query_string(self, params):
         keys = params.keys()
-        keys.sort(cmp=lambda x, y: cmp(x.lower(), y.lower()))
+        keys.sort(key=c2k(lambda x, y: cmp(x.lower(), y.lower())))
         pairs = []
         for key in keys:
-            val = boto.utils.get_utf8_value(params[key])
+            val = params[key]
             pairs.append(key + '=' + self._escape_value(val))
         return '&'.join(pairs)
 
