@@ -35,3 +35,9 @@ def loads(*args, **kwargs):
             args[0] = args[0].decode('utf-8')
     return json._loads(*args, **kwargs)
 json.loads = loads
+
+if isinstance(__builtins__, dict) and 'cmp' in __builtins__:
+    cmp = __builtins__['cmp']  # yes, really
+else:
+    def cmp(a, b):
+        return (a > b) - (a < b)
