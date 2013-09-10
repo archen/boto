@@ -25,7 +25,10 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-import mock
+try:
+    import unittest.mock as mock
+except ImportError:
+    import mock
 from tests.unit import unittest
 from tests.unit import AWSMockServiceTestCase
 

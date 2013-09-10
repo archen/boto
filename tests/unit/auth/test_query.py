@@ -20,7 +20,10 @@
 # IN THE SOFTWARE.
 #
 import copy
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 from tests.unit import unittest
 
 from boto.auth import QueryAuthHandler

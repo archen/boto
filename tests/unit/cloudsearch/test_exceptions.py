@@ -1,4 +1,7 @@
-import mock
+try:
+    import unittest.mock as mock
+except ImportError:
+    import mock
 from boto.compat import json
 from tests.unit import unittest
 

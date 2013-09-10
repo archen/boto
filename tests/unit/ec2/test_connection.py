@@ -2,7 +2,10 @@
 import httplib
 
 from datetime import datetime, timedelta
-from mock import MagicMock, Mock, patch
+try:
+    from unittest.mock import MagicMock, Mock, patch
+except ImportError:
+    from mock import MagicMock, Mock, patch
 from tests.unit import unittest
 from tests.unit import AWSMockServiceTestCase
 
