@@ -36,6 +36,8 @@ def loads(*args, **kwargs):
     return json._loads(*args, **kwargs)
 json.loads = loads
 
+# set cmp, which doesn't exist anymore in python3
+
 if isinstance(__builtins__, dict) and 'cmp' in __builtins__:
     cmp = __builtins__['cmp']  # yes, really
 else:

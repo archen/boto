@@ -29,7 +29,7 @@ import base64
 import warnings
 from datetime import datetime
 from datetime import timedelta
-from functools import cmp_to_key as c2k
+import functools
 
 import boto
 from boto.connection import AWSQueryConnection
@@ -2113,7 +2113,11 @@ class EC2Connection(AWSQueryConnection):
         # get all the snapshots, sort them by date and time, and
         # organize them into one array for each volume:
         all_snapshots = self.get_all_snapshots(owner = 'self')
-        all_snapshots.sort(key = c2k(lambda x, y: cmp(x.start_time, y.start_time)))
+        if hasattr(functools, 'cmp_to_key'):
+            c2k = functools.cmp_to_key
+            all_snapshots.sort(key = c2k(lambda x, y: cmp(x.start_time, y.start_time)))
+        else:
+            all_snapshots.sort(cmp=lambda x, y: cmp(x.start_time, y.start_time))
         snaps_for_each_volume = {}
         for snap in all_snapshots:
             # the snapshot name and the volume name are the same.

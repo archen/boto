@@ -40,7 +40,7 @@ import sys
 import time
 import urllib
 import posixpath
-from functools import cmp_to_key as c2k
+import functools
 
 from boto.auth_handler import AuthHandler
 from boto.exception import BotoClientError
@@ -563,7 +563,11 @@ class QueryAuthHandler(AuthHandler):
 
     def _build_query_string(self, params):
         keys = params.keys()
-        keys.sort(key=c2k(lambda x, y: cmp(x.lower(), y.lower())))
+        if hasattr(functools, 'cmp_to_key'):
+            c2k = functools.cmp_to_key
+            keys.sort(key=c2k(lambda x, y: cmp(x.lower(), y.lower())))
+        else:
+            keys.sort(cmp=lambda x, y: cmp(x.lower(), y.lower()))
         pairs = []
         for key in keys:
             val = params[key]
