@@ -29,6 +29,7 @@ import base64
 import warnings
 from datetime import datetime
 from datetime import timedelta
+from functools import cmp_to_key as c2k
 
 import boto
 from boto.connection import AWSQueryConnection
@@ -60,6 +61,7 @@ from boto.ec2.volumestatus import VolumeStatusSet
 from boto.ec2.networkinterface import NetworkInterface
 from boto.ec2.attributes import AccountAttribute, VPCAttribute
 from boto.exception import EC2ResponseError
+from boto.compat import cmp
 
 #boto.set_stream_logger('ec2')
 
@@ -2111,7 +2113,7 @@ class EC2Connection(AWSQueryConnection):
         # get all the snapshots, sort them by date and time, and
         # organize them into one array for each volume:
         all_snapshots = self.get_all_snapshots(owner = 'self')
-        all_snapshots.sort(cmp = lambda x, y: cmp(x.start_time, y.start_time))
+        all_snapshots.sort(key = c2k(lambda x, y: cmp(x.start_time, y.start_time)))
         snaps_for_each_volume = {}
         for snap in all_snapshots:
             # the snapshot name and the volume name are the same.
