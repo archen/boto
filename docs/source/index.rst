@@ -54,7 +54,7 @@ Currently Supported Services
 
   * :doc:`Cloudsearch <cloudsearch_tut>` -- (:doc:`API Reference <ref/cloudsearch>`)
   * Elastic Transcoder -- (:doc:`API Reference <ref/elastictranscoder>`)
-  * Simple Workflow Service (SWF) -- (:doc:`API Reference <ref/swf>`)
+  * :doc:`Simple Workflow Service (SWF) <swf_tut>` -- (:doc:`API Reference <ref/swf>`)
   * :doc:`Simple Queue Service (SQS) <sqs_tut>` -- (:doc:`API Reference <ref/sqs>`)
   * Simple Notification Service (SNS) -- (:doc:`API Reference <ref/sns>`)
   * :doc:`Simple Email Service (SES) <ses_tut>` -- (:doc:`API Reference <ref/ses>`)
@@ -91,6 +91,7 @@ Currently Supported Services
 Additional Resources
 --------------------
 
+* :doc:`Applications Built On Boto <apps_built_on_boto>`
 * :doc:`Command Line Utilities <commandline>`
 * :doc:`Boto Config Tutorial <boto_config_tut>`
 * :doc:`Contributing to Boto <contributing>`
@@ -113,6 +114,11 @@ Release Notes
 .. toctree::
    :titlesonly:
 
+   releasenotes/v2.15.0
+   releasenotes/v2.14.0
+   releasenotes/v2.13.3
+   releasenotes/v2.13.2
+   releasenotes/v2.13.0
    releasenotes/v2.12.0
    releasenotes/v2.11.0
    releasenotes/v2.10.0
@@ -158,6 +164,7 @@ Release Notes
    rds_tut
    sqs_tut
    ses_tut
+   swf_tut
    cloudsearch_tut
    cloudwatch_tut
    vpc_tut
@@ -170,6 +177,7 @@ Release Notes
    support_tut
    dynamodb2_tut
    migrations/dynamodb_v1_to_v2
+   apps_built_on_boto
    ref/*
    releasenotes/*
 

@@ -12,8 +12,10 @@ from tests.unit import AWSMockServiceTestCase
 import boto.ec2
 
 from boto.regioninfo import RegionInfo
+from boto.ec2.blockdevicemapping import BlockDeviceType, BlockDeviceMapping
 from boto.ec2.connection import EC2Connection
 from boto.ec2.snapshot import Snapshot
+from boto.ec2.reservedinstance import ReservedInstancesConfiguration
 
 
 class TestEC2ConnectionBase(AWSMockServiceTestCase):
@@ -152,6 +154,42 @@ class TestPurchaseReservedInstanceOffering(TestEC2ConnectionBase):
             'ReservedInstancesOfferingId': 'offering_id',
             'LimitPrice.Amount': '100.0',
             'LimitPrice.CurrencyCode': 'USD',},
+             ignore_params_values=['AWSAccessKeyId', 'SignatureMethod',
+                                   'SignatureVersion', 'Timestamp',
+                                   'Version'])
+
+
+class TestCreateImage(TestEC2ConnectionBase):
+    def default_body(self):
+        return """<CreateImageResponse xmlns="http://ec2.amazonaws.com/doc/2013-10-01/">
+   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
+   <imageId>ami-4fa54026</imageId>
+</CreateImageResponse>"""
+
+    def test_minimal(self):
+        self.set_http_response(status_code=200)
+        response = self.ec2.create_image(
+                'instance_id', 'name')
+        self.assert_request_parameters({
+            'Action': 'CreateImage',
+            'InstanceId': 'instance_id',
+            'Name': 'name'},
+             ignore_params_values=['AWSAccessKeyId', 'SignatureMethod',
+                                   'SignatureVersion', 'Timestamp',
+                                   'Version'])
+
+    def test_block_device_mapping(self):
+        self.set_http_response(status_code=200)
+        bdm = BlockDeviceMapping()
+        bdm['test'] = BlockDeviceType()
+        response = self.ec2.create_image(
+                'instance_id', 'name', block_device_mapping=bdm)
+        self.assert_request_parameters({
+            'Action': 'CreateImage',
+            'InstanceId': 'instance_id',
+            'Name': 'name',
+            'BlockDeviceMapping.1.DeviceName': 'test',
+            'BlockDeviceMapping.1.Ebs.DeleteOnTermination': 'false'},
              ignore_params_values=['AWSAccessKeyId', 'SignatureMethod',
                                    'SignatureVersion', 'Timestamp',
                                    'Version'])
@@ -486,6 +524,47 @@ class TestCopySnapshot(TestEC2ConnectionBase):
                                    'SignatureVersion', 'Timestamp',
                                    'Version'])
 
+class TestCopyImage(TestEC2ConnectionBase):
+    def default_body(self):
+        return """
+        <CopyImageResponse xmlns="http://ec2.amazonaws.com/doc/2013-07-15/">
+           <requestId>request_id</requestId>
+           <imageId>ami-copied-id</imageId>
+        </CopyImageResponse>
+        """
+
+    def test_copy_image(self):
+        self.set_http_response(status_code=200)
+        copied_ami = self.ec2.copy_image('us-west-2', 'ami-id',
+                                     'name', 'description', 'client-token')
+        self.assertEqual(copied_ami.image_id, 'ami-copied-id')
+
+        self.assert_request_parameters({
+            'Action': 'CopyImage',
+            'Description': 'description',
+            'Name': 'name',
+            'SourceRegion': 'us-west-2',
+            'SourceImageId': 'ami-id',
+            'ClientToken': 'client-token'},
+             ignore_params_values=['AWSAccessKeyId', 'SignatureMethod',
+                                   'SignatureVersion', 'Timestamp',
+                                   'Version'])
+    def test_copy_image_without_name(self):
+        self.set_http_response(status_code=200)
+        copied_ami = self.ec2.copy_image('us-west-2', 'ami-id',
+                                         description='description',
+                                         client_token='client-token')
+        self.assertEqual(copied_ami.image_id, 'ami-copied-id')
+
+        self.assert_request_parameters({
+            'Action': 'CopyImage',
+            'Description': 'description',
+            'SourceRegion': 'us-west-2',
+            'SourceImageId': 'ami-id',
+            'ClientToken': 'client-token'},
+             ignore_params_values=['AWSAccessKeyId', 'SignatureMethod',
+                                   'SignatureVersion', 'Timestamp',
+                                   'Version'])
 
 class TestAccountAttributes(TestEC2ConnectionBase):
     def default_body(self):
@@ -631,6 +710,97 @@ class TestGetAllNetworkInterfaces(TestEC2ConnectionBase):
         parsed = self.ec2.get_all_network_interfaces()
 
         self.assertEqual(5, parsed[0].attachment.device_index)
+
+class TestGetAllImages(TestEC2ConnectionBase):
+    def default_body(self):
+        return """
+<DescribeImagesResponse xmlns="http://ec2.amazonaws.com/doc/2013-02-01/">
+    <requestId>e32375e8-4ac3-4099-a8bf-3ec902b9023e</requestId>
+    <imagesSet>
+        <item>
+            <imageId>ami-abcd1234</imageId>
+            <imageLocation>111111111111/windows2008r2-hvm-i386-20130702</imageLocation>
+            <imageState>available</imageState>
+            <imageOwnerId>111111111111</imageOwnerId>
+            <isPublic>false</isPublic>
+            <architecture>i386</architecture>
+            <imageType>machine</imageType>
+            <platform>windows</platform>
+            <viridianEnabled>true</viridianEnabled>
+            <name>Windows Test</name>
+            <description>Windows Test Description</description>
+            <billingProducts>
+                        <item>
+                                <billingProduct>bp-6ba54002</billingProduct>
+                        </item>
+                        </billingProducts>
+            <rootDeviceType>ebs</rootDeviceType>
+            <rootDeviceName>/dev/sda1</rootDeviceName>
+            <blockDeviceMapping>
+                <item>
+                    <deviceName>/dev/sda1</deviceName>
+                    <ebs>
+                        <snapshotId>snap-abcd1234</snapshotId>
+                        <volumeSize>30</volumeSize>
+                        <deleteOnTermination>true</deleteOnTermination>
+                        <volumeType>standard</volumeType>
+                    </ebs>
+                </item>
+                <item>
+                    <deviceName>xvdb</deviceName>
+                    <virtualName>ephemeral0</virtualName>
+                </item>
+                <item>
+                    <deviceName>xvdc</deviceName>
+                    <virtualName>ephemeral1</virtualName>
+                </item>
+                <item>
+                    <deviceName>xvdd</deviceName>
+                    <virtualName>ephemeral2</virtualName>
+                </item>
+                <item>
+                    <deviceName>xvde</deviceName>
+                    <virtualName>ephemeral3</virtualName>
+                </item>
+            </blockDeviceMapping>
+            <virtualizationType>hvm</virtualizationType>
+            <hypervisor>xen</hypervisor>
+        </item>
+    </imagesSet>
+</DescribeImagesResponse>"""
+
+    def test_get_all_images(self):
+        self.set_http_response(status_code=200)
+        parsed = self.ec2.get_all_images()
+        self.assertEquals(1, len(parsed))
+        self.assertEquals("ami-abcd1234", parsed[0].id)
+        self.assertEquals("111111111111/windows2008r2-hvm-i386-20130702", parsed[0].location)
+        self.assertEquals("available", parsed[0].state)
+        self.assertEquals("111111111111", parsed[0].ownerId)
+        self.assertEquals("111111111111", parsed[0].owner_id)
+        self.assertEquals(False, parsed[0].is_public)
+        self.assertEquals("i386", parsed[0].architecture)
+        self.assertEquals("machine", parsed[0].type)
+        self.assertEquals(None, parsed[0].kernel_id)
+        self.assertEquals(None, parsed[0].ramdisk_id)
+        self.assertEquals(None, parsed[0].owner_alias)
+        self.assertEquals("windows", parsed[0].platform)
+        self.assertEquals("Windows Test", parsed[0].name)
+        self.assertEquals("Windows Test Description", parsed[0].description)
+        self.assertEquals("ebs", parsed[0].root_device_type)
+        self.assertEquals("/dev/sda1", parsed[0].root_device_name)
+        self.assertEquals("hvm", parsed[0].virtualization_type)
+        self.assertEquals("xen", parsed[0].hypervisor)
+        self.assertEquals(None, parsed[0].instance_lifecycle)
+
+        # 1 billing product parsed into a list
+        self.assertEquals(1, len(parsed[0].billing_products))
+        self.assertEquals("bp-6ba54002", parsed[0].billing_products[0])
+
+        # Just verify length, there is already a block_device_mapping test
+        self.assertEquals(5, len(parsed[0].block_device_mapping))
+
+        # TODO: No tests for product codes?
 
 
 class TestModifyInterfaceAttribute(TestEC2ConnectionBase):
@@ -879,6 +1049,214 @@ class TestTrimSnapshots(TestEC2ConnectionBase):
         # Restore
         self.ec2.get_all_snapshots = orig['get_all_snapshots']
         self.ec2.delete_snapshot = orig['delete_snapshot']
+
+
+class TestModifyReservedInstances(TestEC2ConnectionBase):
+    def default_body(self):
+        return """<ModifyReservedInstancesResponse xmlns='http://ec2.amazonaws.com/doc/2013-08-15/'>
+    <requestId>bef729b6-0731-4489-8881-2258746ae163</requestId>
+    <reservedInstancesModificationId>rimod-3aae219d-3d63-47a9-a7e9-e764example</reservedInstancesModificationId>
+</ModifyReservedInstancesResponse>"""
+
+    def test_serialized_api_args(self):
+        self.set_http_response(status_code=200)
+        response = self.ec2.modify_reserved_instances(
+            'a-token-goes-here',
+            reserved_instance_ids=[
+                '2567o137-8a55-48d6-82fb-7258506bb497',
+            ],
+            target_configurations=[
+                ReservedInstancesConfiguration(
+                    availability_zone='us-west-2c',
+                    platform='EC2-VPC',
+                    instance_count=3
+                ),
+            ]
+        )
+        self.assert_request_parameters({
+            'Action': 'ModifyReservedInstances',
+            'ClientToken': 'a-token-goes-here',
+            'ReservedInstancesConfigurationSetItemType.0.AvailabilityZone': 'us-west-2c',
+            'ReservedInstancesConfigurationSetItemType.0.InstanceCount': 3,
+            'ReservedInstancesConfigurationSetItemType.0.Platform': 'EC2-VPC',
+            'ReservedInstancesId.1': '2567o137-8a55-48d6-82fb-7258506bb497'
+        }, ignore_params_values=[
+            'AWSAccessKeyId', 'SignatureMethod',
+            'SignatureVersion', 'Timestamp',
+            'Version'
+        ])
+
+        self.assertEqual(response, 'rimod-3aae219d-3d63-47a9-a7e9-e764example')
+
+
+class TestDescribeReservedInstancesModifications(TestEC2ConnectionBase):
+    def default_body(self):
+        return """<DescribeReservedInstancesModificationsResponse xmlns='http://ec2.amazonaws.com/doc/2013-08-15/'>
+    <requestId>eb4a6e3c-3689-445c-b536-19e38df35898</requestId>
+    <reservedInstancesModificationsSet>
+        <item>
+            <reservedInstancesModificationId>rimod-49b9433e-fdc7-464a-a6e5-9dabcexample</reservedInstancesModificationId>
+            <reservedInstancesSet>
+                <item>
+                    <reservedInstancesId>2567o137-8a55-48d6-82fb-7258506bb497</reservedInstancesId>
+                </item>
+            </reservedInstancesSet>
+            <modificationResultSet>
+                <item>
+                    <reservedInstancesId>9d5cb137-5d65-4479-b4ac-8c337example</reservedInstancesId>
+                    <targetConfiguration>
+                        <availabilityZone>us-east-1b</availabilityZone>
+                        <platform>EC2-VPC</platform>
+                        <instanceCount>1</instanceCount>
+                    </targetConfiguration>
+                </item>
+            </modificationResultSet>
+            <createDate>2013-09-02T21:20:19.637Z</createDate>
+            <updateDate>2013-09-02T21:38:24.143Z</updateDate>
+            <effectiveDate>2013-09-02T21:00:00.000Z</effectiveDate>
+            <status>fulfilled</status>
+            <clientToken>token-f5b56c05-09b0-4d17-8d8c-c75d8a67b806</clientToken>
+        </item>
+    </reservedInstancesModificationsSet>
+</DescribeReservedInstancesModificationsResponse>"""
+
+    def test_serialized_api_args(self):
+        self.set_http_response(status_code=200)
+        response = self.ec2.describe_reserved_instances_modifications(
+            reserved_instances_modification_ids=[
+                '2567o137-8a55-48d6-82fb-7258506bb497'
+            ],
+            filters={
+                'status': 'processing',
+            }
+        )
+        self.assert_request_parameters({
+            'Action': 'DescribeReservedInstancesModifications',
+            'Filter.1.Name': 'status',
+            'Filter.1.Value.1': 'processing',
+            'ReservedInstancesModificationId.1': '2567o137-8a55-48d6-82fb-7258506bb497'
+        }, ignore_params_values=[
+            'AWSAccessKeyId', 'SignatureMethod',
+            'SignatureVersion', 'Timestamp',
+            'Version'
+        ])
+
+        # Make sure the response was parsed correctly.
+        self.assertEqual(
+            response[0].modification_id,
+            'rimod-49b9433e-fdc7-464a-a6e5-9dabcexample'
+        )
+        self.assertEqual(
+            response[0].create_date,
+            datetime(2013, 9, 2, 21, 20, 19, 637000)
+        )
+        self.assertEqual(
+            response[0].update_date,
+            datetime(2013, 9, 2, 21, 38, 24, 143000)
+        )
+        self.assertEqual(
+            response[0].effective_date,
+            datetime(2013, 9, 2, 21, 0, 0, 0)
+        )
+        self.assertEqual(
+            response[0].status,
+            'fulfilled'
+        )
+        self.assertEqual(
+            response[0].status_message,
+            None
+        )
+        self.assertEqual(
+            response[0].client_token,
+            'token-f5b56c05-09b0-4d17-8d8c-c75d8a67b806'
+        )
+        self.assertEqual(
+            response[0].reserved_instances[0].id,
+            '2567o137-8a55-48d6-82fb-7258506bb497'
+        )
+        self.assertEqual(
+            response[0].modification_results[0].availability_zone,
+            'us-east-1b'
+        )
+        self.assertEqual(
+            response[0].modification_results[0].platform,
+            'EC2-VPC'
+        )
+        self.assertEqual(
+            response[0].modification_results[0].instance_count,
+            1
+        )
+        self.assertEqual(len(response), 1)
+
+
+class TestRegisterImage(TestEC2ConnectionBase):
+    def default_body(self):
+        return """
+            <RegisterImageResponse xmlns="http://ec2.amazonaws.com/doc/2013-08-15/">
+              <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
+              <imageId>ami-1a2b3c4d</imageId>
+            </RegisterImageResponse>
+        """
+
+    def test_vm_type_default(self):
+        self.set_http_response(status_code=200)
+        self.ec2.register_image('name', 'description',
+                                image_location='s3://foo')
+
+        self.assert_request_parameters({
+            'Action': 'RegisterImage',
+            'ImageLocation': 's3://foo',
+            'Name': 'name',
+            'Description': 'description',
+        }, ignore_params_values=[
+            'AWSAccessKeyId', 'SignatureMethod',
+            'SignatureVersion', 'Timestamp',
+            'Version'
+        ])
+
+    def test_vm_type_hvm(self):
+        self.set_http_response(status_code=200)
+        self.ec2.register_image('name', 'description',
+                                image_location='s3://foo',
+                                virtualization_type='hvm')
+
+        self.assert_request_parameters({
+            'Action': 'RegisterImage',
+            'ImageLocation': 's3://foo',
+            'Name': 'name',
+            'Description': 'description',
+            'VirtualizationType': 'hvm'
+        }, ignore_params_values=[
+            'AWSAccessKeyId', 'SignatureMethod',
+            'SignatureVersion', 'Timestamp',
+            'Version'
+        ])
+
+
+class TestTerminateInstances(TestEC2ConnectionBase):
+    def default_body(self):
+        return """<?xml version="1.0" ?>
+            <TerminateInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2013-07-15/">
+                <requestId>req-59a9ad52-0434-470c-ad48-4f89ded3a03e</requestId>
+                <instancesSet>
+                    <item>
+                        <instanceId>i-000043a2</instanceId>
+                        <shutdownState>
+                            <code>16</code>
+                            <name>running</name>
+                        </shutdownState>
+                        <previousState>
+                            <code>16</code>
+                            <name>running</name>
+                        </previousState>
+                    </item>
+                </instancesSet>
+            </TerminateInstancesResponse>
+        """
+
+    def test_terminate_bad_response(self):
+        self.set_http_response(status_code=200)
+        self.ec2.terminate_instances('foo')
 
 
 if __name__ == '__main__':
