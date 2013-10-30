@@ -20,7 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 from boto.exception import BotoServerError
 from boto.route53.connection import Route53Connection

@@ -1,7 +1,11 @@
 import boto.swf.layer2
 from boto.swf.layer2 import Domain, ActivityType, WorkflowType, WorkflowExecution
 from tests.unit import unittest
-from mock import Mock
+
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 
 class TestDomain(unittest.TestCase):

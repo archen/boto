@@ -28,7 +28,10 @@ except ImportError:
     paramiko = None
     SSHClient = None
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 from tests.unit import unittest
 
