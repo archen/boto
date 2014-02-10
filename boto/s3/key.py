@@ -30,7 +30,7 @@ try:
     import rfc822
 except ImportError:
     import email.utils as rfc822
-import StringIO
+from io import StringIO
 import base64
 import binascii
 import math
@@ -52,6 +52,7 @@ try:
 except ImportError:
     from md5 import md5
 md5 = wrap_hash_function(md5)
+
 
 class Key(object):
     """
@@ -1366,14 +1367,14 @@ class Key(object):
             be encrypted on the server-side by S3 and will be stored
             in an encrypted form while at rest in S3.
         """
-        if isinstance(s, unicode):
+        if isinstance(s, str):
             s = s.encode("utf-8")
         if hasattr(s, 'decode') and not hasattr(s, 'encode'):
             # python3
             import io
             fp = io.BytesIO(s)
         else:
-            fp = StringIO.StringIO(s)
+            fp = StringIO(s)
         r = self.set_contents_from_file(fp, headers, replace, cb, num_cb,
                                         policy, md5, reduced_redundancy,
                                         encrypt_key=encrypt_key)
@@ -1489,7 +1490,7 @@ class Key(object):
                     if i == cb_count or cb_count == -1:
                         cb(data_len, cb_size)
                         i = 0
-        except IOError, e:
+        except IOError as e:
             if e.errno == errno.ENOSPC:
                 raise StorageDataError('Out of space for destination file '
                                        '%s' % fp.name)

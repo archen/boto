@@ -20,9 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-import StringIO, os, re
+import os, re
+from io import StringIO
 import warnings
-import ConfigParser
+from configparser import ConfigParser
 import boto
 
 # If running in Google App Engine there is no "user" and
@@ -55,10 +56,10 @@ elif 'BOTO_PATH' in os.environ:
         BotoConfigLocations.append(expanduser(path))
 
 
-class Config(ConfigParser.SafeConfigParser):
+class Config(ConfigParser):
 
     def __init__(self, path=None, fp=None, do_load=True):
-        ConfigParser.SafeConfigParser.__init__(self, {'working_dir' : '/mnt/pyami',
+        ConfigParser.__init__(self, {'working_dir' : '/mnt/pyami',
                                                       'debug' : '0'})
         if do_load:
             if path:
@@ -99,7 +100,7 @@ class Config(ConfigParser.SafeConfigParser):
         Replace any previous value.  If the path doesn't exist, create it.
         Also add the option the the in-memory config.
         """
-        config = ConfigParser.SafeConfigParser()
+        config = ConfigParser()
         config.read(path)
         if not config.has_section(section):
             config.add_section(section)
@@ -182,7 +183,7 @@ class Config(ConfigParser.SafeConfigParser):
     def dump(self):
         s = StringIO.StringIO()
         self.write(s)
-        print s.getvalue()
+        print(s.getvalue())
 
     def dump_safe(self, fp=None):
         if not fp:
