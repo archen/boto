@@ -33,12 +33,12 @@ import re
 import sys
 import logging
 import logging.config
-import urlparse
+from urllib.parse import urlparse
 from boto.exception import InvalidUriError
 
 vfile = os.path.join(os.path.dirname(os.path.abspath(boto.__file__ )), "version.txt")
 with open(vfile) as f:
-  __version__ = f.read().strip()
+    __version__ = f.read().strip()
 
 Version = __version__  # for backware compatibility
 
@@ -321,7 +321,7 @@ def connect_emr(aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     :rtype: :class:`boto.emr.EmrConnection`
     :return: A connection to Elastic mapreduce
     """
-    from boto.emr import EmrConnection
+    from boto.emr.connection import EmrConnection
     return EmrConnection(aws_access_key_id, aws_secret_access_key, **kwargs)
 
 
@@ -336,7 +336,7 @@ def connect_sns(aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     :rtype: :class:`boto.sns.SNSConnection`
     :return: A connection to Amazon's SNS
     """
-    from boto.sns import SNSConnection
+    from boto.sns.connection import SNSConnection
     return SNSConnection(aws_access_key_id, aws_secret_access_key, **kwargs)
 
 
@@ -351,7 +351,7 @@ def connect_iam(aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     :rtype: :class:`boto.iam.IAMConnection`
     :return: A connection to Amazon's IAM
     """
-    from boto.iam import IAMConnection
+    from boto.iam.connection import IAMConnection
     return IAMConnection(aws_access_key_id, aws_secret_access_key, **kwargs)
 
 
@@ -367,7 +367,7 @@ def connect_route53(aws_access_key_id=None, aws_secret_access_key=None,
     :rtype: :class:`boto.dns.Route53Connection`
     :return: A connection to Amazon's Route53 DNS Service
     """
-    from boto.route53 import Route53Connection
+    from boto.route53.connection import Route53Connection
     return Route53Connection(aws_access_key_id, aws_secret_access_key,
                              **kwargs)
 
@@ -384,7 +384,7 @@ def connect_cloudformation(aws_access_key_id=None, aws_secret_access_key=None,
     :rtype: :class:`boto.cloudformation.CloudFormationConnection`
     :return: A connection to Amazon's CloudFormation Service
     """
-    from boto.cloudformation import CloudFormationConnection
+    from boto.cloudformation.connection import CloudFormationConnection
     return CloudFormationConnection(aws_access_key_id, aws_secret_access_key,
                                     **kwargs)
 
@@ -466,7 +466,7 @@ def connect_ec2_endpoint(url, aws_access_key_id=None,
     """
     from boto.ec2.regioninfo import RegionInfo
 
-    purl = urlparse.urlparse(url)
+    purl = urlparse(url)
     kwargs['port'] = purl.port
     kwargs['host'] = purl.hostname
     kwargs['path'] = purl.path
@@ -478,7 +478,7 @@ def connect_ec2_endpoint(url, aws_access_key_id=None,
     kwargs['aws_access_key_id'] = aws_access_key_id
     kwargs['aws_secret_access_key'] = aws_secret_access_key
 
-    return(connect_ec2(**kwargs))
+    return connect_ec2(**kwargs)
 
 
 def connect_walrus(host=None, aws_access_key_id=None,
@@ -532,7 +532,7 @@ def connect_ses(aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     :rtype: :class:`boto.ses.SESConnection`
     :return: A connection to Amazon's SES
     """
-    from boto.ses import SESConnection
+    from boto.ses.connection import SESConnection
     return SESConnection(aws_access_key_id, aws_secret_access_key, **kwargs)
 
 
@@ -547,7 +547,7 @@ def connect_sts(aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     :rtype: :class:`boto.sts.STSConnection`
     :return: A connection to Amazon's STS
     """
-    from boto.sts import STSConnection
+    from boto.sts.connection import STSConnection
     return STSConnection(aws_access_key_id, aws_secret_access_key, **kwargs)
 
 
