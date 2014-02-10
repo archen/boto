@@ -101,9 +101,7 @@ class Key(object):
                                     "content-md5", "content-type"])
     _underscore_base_user_settable_fields = set()
     for f in base_user_settable_fields:
-      _underscore_base_user_settable_fields.add(f.replace('-', '_'))
-
-
+        _underscore_base_user_settable_fields.add(f.replace('-', '_'))
 
     def __init__(self, bucket=None, name=None):
         self.bucket = bucket
@@ -171,7 +169,7 @@ class Key(object):
         elif 'md5' in self.local_hashes:
             self.local_hashes.pop('md5', None)
 
-    md5 = property(_get_md5, _set_md5);
+    md5 = property(_get_md5, _set_md5)
 
     def _get_base64md5(self):
         if 'md5' in self.local_hashes and self.local_hashes['md5']:
